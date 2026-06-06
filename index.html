@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calm Winner Spinner</title>
+  <meta name="description" content="Halaman spinner undian dengan sistem target kena, banyak pemenang, dan custom winner opsional." />
+  <style>
+    :root{
+      --bg:#eef7ed;
+      --bg2:#dcefdc;
+      --card:rgba(255,255,247,.78);
+      --card-solid:#fffdf3;
+      --text:#234134;
+      --muted:#6c8174;
+      --line:rgba(64,99,78,.16);
+      --green:#5f9c72;
+      --green-dark:#2f6c4b;
+      --leaf:#9bc69f;
+      --cream:#fff5cf;
+      --orange:#e9ad62;
+      --red:#d97166;
+      --blue:#7daec4;
+      --shadow:0 24px 70px rgba(41,74,55,.16);
+      --radius:28px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255,245,207,.95), transparent 34%),
+        radial-gradient(circle at 86% 12%, rgba(125,174,196,.34), transparent 30%),
+        radial-gradient(circle at 60% 92%, rgba(155,198,159,.5), transparent 38%),
+        linear-gradient(145deg,var(--bg),var(--bg2));
+      overflow-x:hidden;
+    }
+    body::before,
+    body::after{
+      content:"";
+      position:fixed;
+      inset:auto;
+      pointer-events:none;
+      z-index:-1;
+      filter:blur(.2px);
+      opacity:.78;
+    }
+    body::before{
+      width:580px;height:580px;left:-180px;bottom:-220px;
+      background:radial-gradient(circle,rgba(95,156,114,.22),transparent 66%);
+      animation:floatBlob 14s ease-in-out infinite alternate;
+    }
+    body::after{
+      width:460px;height:460px;right:-120px;top:80px;
+      background:radial-gradient(circle,rgba(233,173,98,.18),transparent 68%);
+      animation:floatBlob 18s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes floatBlob{to{transform:translate(30px,-28px) scale(1.06)}}
+    .page{width:min(1420px,calc(100% - 32px));margin:0 auto;padding:28px 0 42px}
+    .hero{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:24px;
+      align-items:stretch;
+      margin-bottom:24px;
+    }
+    .panel{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,.62);
+      box-shadow:var(--shadow);
+      border-radius:var(--radius);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      position:relative;
+      overflow:hidden;
+    }
+    .intro{padding:34px;min-height:320px;display:flex;flex-direction:column;justify-content:space-between}
+    .tag{
+      display:inline-flex;align-items:center;gap:8px;width:max-content;
+      padding:8px 13px;border-radius:999px;background:rgba(95,156,114,.14);border:1px solid rgba(95,156,114,.2);
+      color:var(--green-dark);font-weight:800;font-size:13px;letter-spacing:.2px;
+    }
+    .tag i{width:8px;height:8px;border-radius:999px;background:var(--green);box-shadow:0 0 0 6px rgba(95,156,114,.12)}
+    h1{font-size:clamp(34px,5vw,66px);line-height:.96;margin:24px 0 16px;letter-spacing:-2.6px;color:#1d382b}
+    .intro p{font-size:17px;line-height:1.75;color:var(--muted);max-width:760px;margin:0}
+    .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+    button,.btn{
+      appearance:none;border:0;cursor:pointer;text-decoration:none;
+      border-radius:18px;padding:13px 18px;font-weight:900;font-size:14px;
+      transition:.22s ease;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+      color:var(--text);user-select:none;
+    }
+    button:active{transform:scale(.98)}
+    .btn-primary{background:linear-gradient(135deg,#6fb981,#3d8059);color:#fff;box-shadow:0 12px 30px rgba(63,128,89,.24)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 18px 38px rgba(63,128,89,.28)}
+    .btn-soft{background:rgba(255,255,255,.7);border:1px solid var(--line);color:var(--green-dark)}
+    .btn-danger{background:rgba(217,113,102,.13);color:#a3433b;border:1px solid rgba(217,113,102,.2)}
+    .btn-dark{background:#223d30;color:#fff}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:24px}
+    .stat{background:rgba(255,255,255,.54);border:1px solid var(--line);border-radius:22px;padding:20px;min-height:96px}
+    .stat b{font-size:34px;display:block;letter-spacing:-1.5px;color:#1d382b}
+    .stat span{font-size:13px;color:var(--muted);font-weight:800}
+    .layout{display:grid;grid-template-columns:390px minmax(0,1fr) 390px;gap:22px;align-items:start}
+    .card{padding:22px}
+    .card h2{margin:0 0 14px;font-size:21px;letter-spacing:-.5px}
+    .hint{font-size:13px;line-height:1.55;color:var(--muted);margin:0 0 13px}
+    label{display:block;font-size:12px;font-weight:900;color:#355442;margin:14px 0 7px;text-transform:uppercase;letter-spacing:.7px}
+    textarea,input,select{
+      width:100%;border:1px solid var(--line);background:rgba(255,255,255,.72);border-radius:18px;
+      color:var(--text);font:inherit;outline:none;padding:13px 14px;transition:.2s ease;
+    }
+    textarea{min-height:180px;resize:vertical;line-height:1.5}
+    input:focus,textarea:focus,select:focus{border-color:rgba(95,156,114,.6);box-shadow:0 0 0 4px rgba(95,156,114,.12);background:rgba(255,255,255,.9)}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .mini-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+    .wheel-zone{padding:24px;display:grid;gap:18px;justify-items:center;text-align:center;min-height:650px}
+    .wheel-wrap{position:relative;width:min(610px,100%);aspect-ratio:1;display:grid;place-items:center;margin-top:4px}
+    canvas{width:100%;height:100%;filter:drop-shadow(0 28px 44px rgba(40,77,55,.2))}
+    .pointer{
+      position:absolute;top:-4px;left:50%;transform:translateX(-50%);z-index:5;
+      width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-top:34px solid #294d39;
+      filter:drop-shadow(0 8px 8px rgba(0,0,0,.18));
+    }
+    .center-badge{
+      position:absolute;width:30%;aspect-ratio:1;border-radius:999px;background:linear-gradient(145deg,#fffdf3,#f4e7ba);
+      border:10px solid rgba(255,255,255,.65);display:grid;place-items:center;text-align:center;box-shadow:0 18px 36px rgba(54,89,64,.22);z-index:4;padding:16px;
+    }
+    .center-badge strong{font-size:clamp(15px,2vw,22px);letter-spacing:-.6px;line-height:1.05}
+    .center-badge span{font-size:11px;font-weight:900;color:var(--muted);margin-top:5px;display:block}
+    .result-box{width:100%;background:rgba(255,255,255,.54);border:1px solid var(--line);border-radius:24px;padding:18px;min-height:118px;display:grid;place-items:center}
+    .result-name{font-size:clamp(25px,4vw,44px);font-weight:950;letter-spacing:-1.5px;color:#1f3b2d;line-height:1.05;word-break:break-word}
+    .result-meta{margin-top:8px;color:var(--muted);font-weight:800;font-size:13px}
+    .controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+    .progress-list,.winner-list,.history-list{display:grid;gap:9px;max-height:350px;overflow:auto;padding-right:4px}
+    .history-list{max-height:260px}
+    .row-item{display:flex;justify-content:space-between;gap:12px;align-items:center;background:rgba(255,255,255,.56);border:1px solid var(--line);padding:11px 12px;border-radius:16px}
+    .row-item strong{font-size:14px;word-break:break-word}.row-item span{font-size:12px;color:var(--muted);font-weight:900;white-space:nowrap}
+    .pill{padding:5px 9px;border-radius:999px;background:rgba(95,156,114,.14);color:var(--green-dark);font-weight:950;font-size:11px;border:1px solid rgba(95,156,114,.2)}
+    .pill.win{background:rgba(233,173,98,.18);color:#9b6230;border-color:rgba(233,173,98,.28)}
+    .pill.custom{background:rgba(125,174,196,.18);color:#37687e;border-color:rgba(125,174,196,.28)}
+    .empty{padding:18px;border-radius:18px;background:rgba(255,255,255,.42);border:1px dashed rgba(64,99,78,.22);color:var(--muted);font-size:13px;line-height:1.5;text-align:center}
+    .notice{margin-top:14px;padding:13px 14px;border-radius:18px;background:rgba(233,173,98,.13);border:1px solid rgba(233,173,98,.22);color:#79552f;font-size:13px;line-height:1.5;font-weight:700}
+    .secret-panel{margin-top:10px}
+    .secret-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .secret-status{margin-top:10px;padding:12px 13px;border-radius:16px;background:rgba(95,156,114,.13);border:1px solid rgba(95,156,114,.2);color:var(--green-dark);font-size:13px;font-weight:850;line-height:1.45}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}.tab{background:rgba(255,255,255,.44);border:1px solid var(--line);padding:10px;border-radius:15px;font-size:13px}.tab.active{background:var(--green);color:#fff;border-color:transparent}
+    .hidden{display:none!important}.footer{text-align:center;color:var(--muted);font-size:12px;font-weight:800;margin-top:26px}.shake{animation:shake .22s ease 2}@keyframes shake{50%{transform:translateX(4px)}}
+    .leaf{position:fixed;width:13px;height:13px;border-radius:100% 0 100% 0;background:rgba(95,156,114,.22);top:-20px;z-index:-1;animation:fall linear infinite}.leaf:nth-child(1){left:12%;animation-duration:12s}.leaf:nth-child(2){left:36%;animation-duration:16s;animation-delay:-4s}.leaf:nth-child(3){left:64%;animation-duration:13s;animation-delay:-7s}.leaf:nth-child(4){left:86%;animation-duration:18s;animation-delay:-2s}@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+    .modal{position:fixed;inset:0;background:rgba(25,44,33,.32);display:none;place-items:center;padding:18px;z-index:50;backdrop-filter:blur(8px)}.modal.show{display:grid}.modal-card{width:min(560px,100%);background:var(--card-solid);border-radius:30px;box-shadow:0 30px 90px rgba(23,40,30,.28);padding:30px;text-align:center;border:1px solid rgba(255,255,255,.7)}.modal-card h3{font-size:34px;letter-spacing:-1.2px;margin:0 0 8px}.modal-card p{color:var(--muted);line-height:1.6;margin:0 0 20px}.modal-winner{font-size:42px;font-weight:1000;color:var(--green-dark);letter-spacing:-1.5px;word-break:break-word;margin:14px 0}
+    @media(max-width:1180px){.layout{grid-template-columns:360px 1fr}.side-right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:22px}.side-right .card{height:100%}}
+    @media(max-width:860px){.page{width:min(100% - 22px,720px);padding-top:16px}.hero,.layout{grid-template-columns:1fr}.intro{padding:25px}.stats{grid-template-columns:1fr 1fr;padding:18px}.stats .stat:last-child{grid-column:1/-1}.side-right{grid-template-columns:1fr}.wheel-zone{min-height:auto;padding:18px}.wheel-wrap{width:100%}.grid-2,.mini-actions{grid-template-columns:1fr}h1{letter-spacing:-1.8px}.center-badge{border-width:7px}.controls button{flex:1 1 170px}}
+  </style>
+</head>
+<body>
+  <i class="leaf"></i><i class="leaf"></i><i class="leaf"></i><i class="leaf"></i>
+  <main class="page">
+    <section class="hero">
+      <div class="panel intro">
+        <div>
+          <div class="tag"><i></i> Calm Winner Spinner</div>
+          <h1>Spinner undian dengan target kena.</h1>
+          <p>Masukkan peserta, tentukan jumlah pemenang, lalu atur berapa kali nama harus terkena sebelum resmi menang. Custom winner per peringkat tersedia sebagai opsi admin.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn-primary" id="startSpinTop">Mulai Spin</button>
+          <button class="btn-soft" id="soundToggle">Aktifkan Musik</button>
+        </div>
+      </div>
+      <div class="panel stats">
+        <div class="stat"><b id="statParticipants">0</b><span>Peserta aktif</span></div>
+        <div class="stat"><b id="statWinners">0</b><span>Pemenang terkumpul</span></div>
+        <div class="stat"><b id="statSpins">0</b><span>Total putaran</span></div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <aside class="panel card">
+        <h2>Setup Undian</h2>
+        <p class="hint">Pisahkan peserta dengan enter, koma, atau titik koma. Nomor HP, ID order, dan nama bebas dicampur.</p>
+        <label for="participantsInput">Daftar peserta</label>
+        <textarea id="participantsInput" placeholder="Budi\nAni\nRina\n082123456789\nID-009"></textarea>
+        <div class="grid-2">
+          <div><label for="winnerCount">Jumlah pemenang</label><input id="winnerCount" type="number" min="1" value="10"></div>
+          <div><label for="hitTarget">Target kena</label><input id="hitTarget" type="number" min="1" value="3"></div>
+        </div>
+        <div class="grid-2">
+          <div><label for="spinMs">Durasi spin</label><select id="spinMs"><option value="2800">Tenang</option><option value="4200" selected>Cinematic</option><option value="5600">Lama</option></select></div>
+          <div><label for="soundMode">Musik</label><select id="soundMode"><option value="on" selected>Aktif setelah klik</option><option value="off">Nonaktif</option></select></div>
+        </div>
+        <div class="secret-panel" id="customPanel">
+          <label for="customInput">Custom winner opsional</label>
+          <textarea id="customInput" style="min-height:120px" placeholder="Format bebas:
+1: Ani
+2: 082123456789
+3: Rina"></textarea>
+          <div class="notice">Catatan admin: data custom winner tidak akan tampil di progress, riwayat, atau daftar pemenang. Setelah disimpan, panel ini akan disembunyikan.</div>
+          <div class="secret-tools">
+            <button class="btn-primary" id="saveCustomBtn">Simpan Custom</button>
+            <button class="btn-soft" id="clearCustomBtn">Kosongkan</button>
+          </div>
+        </div>
+        <div class="secret-status hidden" id="customStatus">Pengaturan custom admin tersimpan dan disembunyikan.</div>
+        <div class="mini-actions">
+          <button class="btn-soft" id="sampleBtn">Isi Contoh</button>
+          <button class="btn-danger" id="resetBtn">Reset</button>
+        </div>
+      </aside>
+
+      <section class="panel wheel-zone">
+        <div class="wheel-wrap">
+          <div class="pointer"></div>
+          <canvas id="wheelCanvas" width="900" height="900"></canvas>
+          <div class="center-badge"><div><strong>SPIN</strong><span id="centerInfo">siap</span></div></div>
+        </div>
+        <div class="result-box" id="resultBox">
+          <div>
+            <div class="result-name" id="currentName">Belum ada putaran</div>
+            <div class="result-meta" id="currentMeta">Klik spin untuk memulai.</div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn-primary" id="spinBtn">Spin 1x</button>
+          <button class="btn-dark" id="autoBtn">Auto Sampai Selesai</button>
+          <button class="btn-soft" id="stopAutoBtn">Stop Auto</button>
+        </div>
+      </section>
+
+      <aside class="side-right">
+        <div class="panel card">
+          <div class="tabs"><button class="tab active" data-tab="progress">Progress Hit</button><button class="tab" data-tab="history">Riwayat</button></div>
+          <div id="progressPanel" class="progress-list"><div class="empty">Progress peserta akan tampil setelah data dimuat.</div></div>
+          <div id="historyPanel" class="history-list hidden"><div class="empty">Riwayat putaran masih kosong.</div></div>
+        </div>
+        <div class="panel card">
+          <h2>Daftar Pemenang</h2>
+          <p class="hint">Pemenang diurutkan berdasarkan peserta yang lebih dulu mencapai target kena.</p>
+          <div id="winnerPanel" class="winner-list"><div class="empty">Belum ada pemenang.</div></div>
+        </div>
+      </aside>
+    </section>
+    <div class="footer">Single file index.html • tanpa library eksternal • musik dibuat dari Web Audio API</div>
+  </main>
+
+  <div class="modal" id="winnerModal">
+    <div class="modal-card">
+      <h3>Pemenang Baru</h3>
+      <p id="modalRank">Slot pemenang berhasil terisi.</p>
+      <div class="modal-winner" id="modalWinner">-</div>
+      <button class="btn-primary" id="closeModal">Lanjutkan</button>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const colors = ['#88b98b','#f3d98b','#8bbbd0','#e7a56e','#b8d6a1','#f0c7ad','#7fae8b','#d9c48a','#9ccbd2','#e58b7f'];
+
+  let participants = [];
+  let hits = new Map();
+  let winners = [];
+  let history = [];
+  let customMap = new Map();
+  let savedCustomRaw = '';
+  let angle = 0;
+  let spinning = false;
+  let autoMode = false;
+  let spinCount = 0;
+  let audio = null;
+  let safetyCounter = 0;
+
+  const defaultNames = ['Budi','Ani','Rina','Sari','Dimas','Nadia','Fajar','Lina','Rafi','Mira','Agus','Citra','Bayu','Nina','Dewi','Rangga','Tia','Wawan','Putri','Yoga','Indra','Ayu','Rizki','Maya','Doni','Vina','Reza','Intan','Tegar','Laras'];
+
+  function normalizeName(v){ return String(v || '').trim().replace(/\s+/g,' '); }
+  function keyOf(v){ return normalizeName(v).toLowerCase(); }
+  function parseParticipants(){
+    const raw = $('participantsInput').value.split(/[\n,;]+/).map(normalizeName).filter(Boolean);
+    const seen = new Set();
+    const clean = [];
+    raw.forEach(name => { const k = keyOf(name); if(!seen.has(k)){ seen.add(k); clean.push(name); } });
+    parseCustom(clean);
+    customMap.forEach((name) => {
+      if(!clean.some(p => keyOf(p) === keyOf(name))) clean.push(name);
+    });
+    participants = clean;
+    participants.forEach(p => { if(!hits.has(keyOf(p))) hits.set(keyOf(p),0); });
+    [...hits.keys()].forEach(k => { if(!participants.some(p => keyOf(p) === k)) hits.delete(k); });
+  }
+  function parseCustom(baseList=[]){
+    customMap = new Map();
+    const lines = savedCustomRaw.split('\n').map(v => v.trim()).filter(Boolean);
+    lines.forEach((line, i) => {
+      let rank, name;
+      const match = line.match(/^\s*(\d+)\s*[:=.)-]\s*(.+)$/);
+      if(match){ rank = parseInt(match[1],10); name = normalizeName(match[2]); }
+      else { rank = i + 1; name = normalizeName(line); }
+      if(rank > 0 && name) customMap.set(rank, name);
+    });
+  }
+  function activeParticipants(){ return participants.filter(p => !winners.some(w => keyOf(w.name) === keyOf(p))); }
+  function target(){ return Math.max(1, parseInt($('hitTarget').value,10) || 1); }
+  function maxWinners(){ return Math.max(1, parseInt($('winnerCount').value,10) || 1); }
+  function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function pickCandidate(){
+    parseParticipants();
+    const active = activeParticipants();
+    const t = target();
+    const nextRank = winners.length + 1;
+    const custom = customMap.get(nextRank);
+    const customActive = custom && active.some(p => keyOf(p) === keyOf(custom));
+
+    if(!active.length || winners.length >= maxWinners()) return null;
+
+    if(customActive){
+      const actual = active.find(p => keyOf(p) === keyOf(custom));
+      const ch = hits.get(keyOf(actual)) || 0;
+      const risky = active.filter(p => p !== actual && (hits.get(keyOf(p)) || 0) >= t - 1);
+      if(ch >= t - 1) return actual;
+      if(risky.length) return actual;
+      safetyCounter++;
+      if(Math.random() < 0.42 || safetyCounter > Math.max(5, active.length * 2)) return actual;
+      return rand(active.filter(p => p !== actual) || active);
+    }
+
+    safetyCounter = 0;
+    return rand(active);
+  }
+
+  function drawWheel(highlightName){
+    const w = canvas.width, h = canvas.height, cx = w/2, cy = h/2, r = Math.min(w,h)*.45;
+    ctx.clearRect(0,0,w,h);
+    const list = participants.length ? participants : ['Masukkan','Peserta','Lalu','Spin'];
+    const seg = Math.PI*2 / list.length;
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(angle);
+    list.forEach((name,i) => {
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,r,i*seg,(i+1)*seg); ctx.closePath();
+      ctx.fillStyle = colors[i % colors.length]; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.62)'; ctx.lineWidth = 4; ctx.stroke();
+      if(highlightName && keyOf(highlightName) === keyOf(name)){
+        ctx.save(); ctx.globalAlpha = .22; ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.restore();
+      }
+      ctx.save();
+      ctx.rotate(i*seg + seg/2);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#203c2d'; ctx.font = list.length > 55 ? '700 16px Inter, sans-serif' : list.length > 25 ? '800 20px Inter, sans-serif' : '900 28px Inter, sans-serif';
+      const maxText = list.length > 35 ? 13 : 20;
+      const label = name.length > maxText ? name.slice(0,maxText-1)+'…' : name;
+      ctx.fillText(label,r-26,0);
+      ctx.restore();
+    });
+    ctx.beginPath();ctx.arc(0,0,r+8,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=12;ctx.stroke();
+    ctx.restore();
+  }
+
+  function easeOutCubic(x){ return 1 - Math.pow(1-x,3); }
+  function indexOfParticipant(name){ return Math.max(0, participants.findIndex(p => keyOf(p) === keyOf(name))); }
+
+  function spinOnce(){
+    if(spinning) return;
+    parseParticipants();
+    if(participants.length < 2){ nudge($('participantsInput')); return; }
+    if(winners.length >= maxWinners()){ showStatus('Undian sudah selesai.', 'Jumlah pemenang sudah terpenuhi.'); return; }
+    const candidate = pickCandidate();
+    if(!candidate){ showStatus('Tidak ada kandidat.', 'Semua peserta aktif sudah menjadi pemenang.'); return; }
+    startAudio();
+    spinning = true;
+    $('spinBtn').disabled = true; $('autoBtn').disabled = true;
+    $('centerInfo').textContent = 'berputar';
+    const duration = parseInt($('spinMs').value,10) || 4200;
+    const seg = Math.PI*2 / participants.length;
+    const idx = indexOfParticipant(candidate);
+    const pointerAngle = -Math.PI/2;
+    const segmentCenter = idx * seg + seg/2;
+    const fullTurns = (Math.floor(Math.random()*3)+5) * Math.PI*2;
+    const desired = pointerAngle - segmentCenter;
+    const start = angle;
+    const end = start + fullTurns + normalizeDelta(desired - start);
+    const started = performance.now();
+    function frame(now){
+      const p = Math.min(1,(now-started)/duration);
+      angle = start + (end-start)*easeOutCubic(p);
+      drawWheel(candidate);
+      if(p < 1) requestAnimationFrame(frame); else finishSpin(candidate);
+    }
+    requestAnimationFrame(frame);
+  }
+  function normalizeDelta(delta){
+    const tau = Math.PI*2;
+    while(delta < 0) delta += tau;
+    while(delta >= tau) delta -= tau;
+    return delta;
+  }
+  function finishSpin(name){
+    angle = ((angle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+    const k = keyOf(name);
+    const nextHit = (hits.get(k) || 0) + 1;
+    hits.set(k,nextHit);
+    spinCount++;
+    const t = target();
+    let newWinner = false;
+    let rank = null;
+    if(nextHit >= t && !winners.some(w => keyOf(w.name) === k) && winners.length < maxWinners()){
+      rank = winners.length + 1;
+      const custom = customMap.get(rank);
+      winners.push({rank, name, hits:nextHit, custom: custom && keyOf(custom) === k});
+      newWinner = true;
+      safetyCounter = 0;
+    }
+    history.unshift({spin:spinCount, name, hit:nextHit, winner:newWinner, rank});
+    showStatus(name, newWinner ? `Menang sebagai pemenang #${rank} karena sudah ${nextHit}x kena.` : `Kena ${nextHit}/${t}. Belum menang.`);
+    updateUI();
+    spinning = false;
+    $('spinBtn').disabled = false; $('autoBtn').disabled = false;
+    $('centerInfo').textContent = 'siap';
+    if(newWinner) showWinnerModal(name, rank);
+    if(autoMode && winners.length < maxWinners() && activeParticipants().length){ setTimeout(spinOnce, newWinner ? 1400 : 520); }
+    if(autoMode && winners.length >= maxWinners()) autoMode = false;
+  }
+  function showStatus(name, meta){ $('currentName').textContent = name; $('currentMeta').textContent = meta; }
+  function showWinnerModal(name, rank){ $('modalRank').textContent = `Pemenang #${rank}`; $('modalWinner').textContent = name; $('winnerModal').classList.add('show'); }
+  function nudge(el){ el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),500); }
+
+  function updateUI(){
+    parseParticipants();
+    $('statParticipants').textContent = activeParticipants().length;
+    $('statWinners').textContent = winners.length;
+    $('statSpins').textContent = spinCount;
+    drawWheel();
+    renderProgress(); renderWinners(); renderHistory();
+  }
+  function renderProgress(){
+    const panel = $('progressPanel'); const t = target();
+    if(!participants.length){ panel.innerHTML = '<div class="empty">Progress peserta akan tampil setelah data dimuat.</div>'; return; }
+    const rows = [...participants].sort((a,b)=>(hits.get(keyOf(b))||0)-(hits.get(keyOf(a))||0)).slice(0,120);
+    panel.innerHTML = rows.map(name => {
+      const h = hits.get(keyOf(name)) || 0;
+      const isWin = winners.some(w => keyOf(w.name) === keyOf(name));
+      return `<div class="row-item"><strong>${escapeHtml(name)}</strong><span>${isWin ? '<em class="pill win">WIN</em>' : ''} ${h}/${t}</span></div>`;
+    }).join('');
+  }
+  function renderWinners(){
+    const panel = $('winnerPanel');
+    if(!winners.length){ panel.innerHTML = '<div class="empty">Belum ada pemenang.</div>'; return; }
+    panel.innerHTML = winners.map(w => `<div class="row-item"><strong>#${w.rank} ${escapeHtml(w.name)}</strong><span><em class="pill win">WIN</em></span></div>`).join('');
+  }
+  function renderHistory(){
+    const panel = $('historyPanel');
+    if(!history.length){ panel.innerHTML = '<div class="empty">Riwayat putaran masih kosong.</div>'; return; }
+    panel.innerHTML = history.slice(0,90).map(h => `<div class="row-item"><strong>${escapeHtml(h.name)}</strong><span>Spin #${h.spin} • ${h.winner ? 'WIN #' + h.rank : 'hit ' + h.hit}</span></div>`).join('');
+  }
+  function escapeHtml(v){ return String(v).replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
+
+  function resetAll(keepInput=true){
+    hits = new Map(); winners = []; history = []; spinCount = 0; angle = 0; safetyCounter = 0; autoMode = false;
+    if(!keepInput){ $('participantsInput').value = ''; $('customInput').value = ''; savedCustomRaw = ''; }
+    parseParticipants(); participants.forEach(p => hits.set(keyOf(p),0));
+    showStatus('Belum ada putaran','Klik spin untuk memulai.'); updateUI();
+  }
+
+  function startAudio(){
+    if($('soundMode').value === 'off') return;
+    if(audio) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    const ctxAudio = new AC();
+    const master = ctxAudio.createGain(); master.gain.value = .045; master.connect(ctxAudio.destination);
+    const notes = [196,246.94,293.66,329.63];
+    const oscs = notes.map((n,i)=>{ const osc=ctxAudio.createOscillator(); const gain=ctxAudio.createGain(); osc.type=i%2?'triangle':'sine'; osc.frequency.value=n; gain.gain.value=.08; osc.connect(gain); gain.connect(master); osc.start(); return {osc,gain,n}; });
+    let step=0;
+    const timer = setInterval(()=>{ oscs.forEach((o,i)=>{ const now=ctxAudio.currentTime; o.gain.gain.cancelScheduledValues(now); o.gain.gain.setTargetAtTime(i===step%oscs.length?.12:.035,now,.6); }); step++; },1800);
+    audio = {ctx:ctxAudio, master, oscs, timer, enabled:true};
+    $('soundToggle').textContent = 'Matikan Musik';
+  }
+  function stopAudio(){ if(!audio) return; clearInterval(audio.timer); audio.oscs.forEach(o=>o.osc.stop()); audio.ctx.close(); audio=null; $('soundToggle').textContent='Aktifkan Musik'; }
+
+  $('sampleBtn').addEventListener('click',()=>{ $('participantsInput').value = defaultNames.join('\n'); $('winnerCount').value = 10; $('hitTarget').value = 3; $('customInput').value = ''; savedCustomRaw = ''; $('customPanel').classList.remove('hidden'); $('customStatus').classList.add('hidden'); resetAll(true); });
+  $('saveCustomBtn').addEventListener('click',()=>{
+    savedCustomRaw = $('customInput').value.trim();
+    if(savedCustomRaw){
+      $('customPanel').classList.add('hidden');
+      $('customStatus').classList.remove('hidden');
+    }else{
+      $('customPanel').classList.remove('hidden');
+      $('customStatus').classList.add('hidden');
+    }
+    resetAll(true);
+  });
+  $('clearCustomBtn').addEventListener('click',()=>{
+    $('customInput').value = '';
+    savedCustomRaw = '';
+    $('customPanel').classList.remove('hidden');
+    $('customStatus').classList.add('hidden');
+    resetAll(true);
+  });
+  $('resetBtn').addEventListener('click',()=>resetAll(true));
+  $('spinBtn').addEventListener('click',spinOnce);
+  $('startSpinTop').addEventListener('click',()=>{ document.querySelector('.wheel-zone').scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(spinOnce,350); });
+  $('autoBtn').addEventListener('click',()=>{ autoMode=true; spinOnce(); });
+  $('stopAutoBtn').addEventListener('click',()=>{ autoMode=false; });
+  $('closeModal').addEventListener('click',()=> $('winnerModal').classList.remove('show'));
+  $('winnerModal').addEventListener('click',e=>{ if(e.target.id === 'winnerModal') $('winnerModal').classList.remove('show'); });
+  $('soundToggle').addEventListener('click',()=> audio ? stopAudio() : startAudio());
+  ['participantsInput','winnerCount','hitTarget'].forEach(id => $(id).addEventListener('input',()=> resetAll(true)));
+  $('customInput').addEventListener('input',()=>{ $('customStatus').classList.add('hidden'); });
+  document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+    const tab = btn.dataset.tab; $('progressPanel').classList.toggle('hidden',tab!=='progress'); $('historyPanel').classList.toggle('hidden',tab!=='history');
+  }));
+  document.body.addEventListener('click',()=>{ if($('soundMode').value === 'on' && !audio) startAudio(); },{once:true});
+  resetAll(true);
+})();
+</script>
+</body>
+</html>
+
